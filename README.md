@@ -73,6 +73,12 @@ O PostgreSQL estará disponível na porta **5432**, permitindo acesso via ferram
 
 ## Comandos úteis
 
+Para ver os log da aplicação:
+
+```bash
+docker logs -f artists_api
+```
+
 Para parar todos os serviços:
 
 ```bash
