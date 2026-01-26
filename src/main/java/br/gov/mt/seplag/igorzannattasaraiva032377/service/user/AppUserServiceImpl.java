@@ -4,17 +4,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.user.request.CreateAppUserRequest;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.user.request.UpdateAppUserRequest;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.user.request.UpdatePasswordRequest;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.user.response.AppUserResponse;
 import br.gov.mt.seplag.igorzannattasaraiva032377.entity.user.AppUserEntity;
+import br.gov.mt.seplag.igorzannattasaraiva032377.exception.ConflictException;
+import br.gov.mt.seplag.igorzannattasaraiva032377.exception.ResourceNotFoundException;
 import br.gov.mt.seplag.igorzannattasaraiva032377.mapper.user.AppUserMapper;
 import br.gov.mt.seplag.igorzannattasaraiva032377.repository.user.AppUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class AppUserServiceImpl implements AppUserService {
         var email = request.email().trim().toLowerCase();
 
         if (repository.existsByEmail(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+            throw new ConflictException("E-mail já está em uso");
         }
 
         var entity = AppUserEntity.builder()
@@ -59,7 +59,7 @@ public class AppUserServiceImpl implements AppUserService {
         var normalized = email.trim().toLowerCase();
 
         var entity = repository.findByEmail(normalized)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return mapper.toResponse(entity);
     }
@@ -85,7 +85,7 @@ public class AppUserServiceImpl implements AppUserService {
         if (request.email() != null) {
             var email = request.email().trim().toLowerCase();
             if (!email.equals(entity.getEmail()) && repository.existsByEmail(email)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+                throw new ConflictException("E-mail já está em uso");
             }
             entity.setEmail(email);
         }
@@ -123,6 +123,6 @@ public class AppUserServiceImpl implements AppUserService {
 
     private AppUserEntity getEntityOrThrow(UUID id) {
         return repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 }

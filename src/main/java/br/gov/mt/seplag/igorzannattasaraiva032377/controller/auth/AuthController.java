@@ -2,7 +2,6 @@ package br.gov.mt.seplag.igorzannattasaraiva032377.controller.auth;
 
 import java.time.LocalDateTime;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,11 +12,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.auth.JwtResponse;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.auth.LoginRequest;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.auth.RefreshRequest;
+import br.gov.mt.seplag.igorzannattasaraiva032377.exception.BadRequestException;
+import br.gov.mt.seplag.igorzannattasaraiva032377.exception.UnauthorizedException;
 import br.gov.mt.seplag.igorzannattasaraiva032377.security.jwt.JwtUtils;
 import br.gov.mt.seplag.igorzannattasaraiva032377.security.jwt.TokenBlacklist;
 import br.gov.mt.seplag.igorzannattasaraiva032377.service.user.AppUserService;
@@ -68,15 +68,15 @@ public class AuthController {
         }
 
         if (!StringUtils.hasText(refreshToken)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Refresh token is required");
+            throw new BadRequestException("Refresh token é obrigatório");
         }
 
         if (!jwtUtils.validateJwtToken(refreshToken) || tokenBlacklist.isBlacklisted(refreshToken)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+            throw new UnauthorizedException("Refresh token inválido");
         }
 
         if (!"refresh".equalsIgnoreCase(jwtUtils.getTokenType(refreshToken))) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token type");
+            throw new UnauthorizedException("Tipo de token inválido");
         }
 
         var username = jwtUtils.getUsernameFromToken(refreshToken);
