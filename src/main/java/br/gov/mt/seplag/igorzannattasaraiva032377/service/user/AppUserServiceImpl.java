@@ -1,0 +1,128 @@
+package br.gov.mt.seplag.igorzannattasaraiva032377.service.user;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import br.gov.mt.seplag.igorzannattasaraiva032377.dto.user.request.CreateAppUserRequest;
+import br.gov.mt.seplag.igorzannattasaraiva032377.dto.user.request.UpdateAppUserRequest;
+import br.gov.mt.seplag.igorzannattasaraiva032377.dto.user.request.UpdatePasswordRequest;
+import br.gov.mt.seplag.igorzannattasaraiva032377.dto.user.response.AppUserResponse;
+import br.gov.mt.seplag.igorzannattasaraiva032377.entity.user.AppUserEntity;
+import br.gov.mt.seplag.igorzannattasaraiva032377.mapper.user.AppUserMapper;
+import br.gov.mt.seplag.igorzannattasaraiva032377.repository.user.AppUserRepository;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class AppUserServiceImpl implements AppUserService {
+
+    private final AppUserRepository repository;
+    private final AppUserMapper mapper;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    @Transactional
+    public AppUserResponse create(CreateAppUserRequest request) {
+        var email = request.email().trim().toLowerCase();
+
+        if (repository.existsByEmail(email)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+        }
+
+        var entity = AppUserEntity.builder()
+                .name(request.name().trim())
+                .email(email)
+                .passwordHash(passwordEncoder.encode(request.password()))
+                .active(true)
+                .build();
+
+        var saved = repository.save(entity);
+        return mapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AppUserResponse findById(UUID id) {
+        return mapper.toResponse(getEntityOrThrow(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AppUserResponse findByEmail(String email) {
+        var normalized = email.trim().toLowerCase();
+
+        var entity = repository.findByEmail(normalized)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        return mapper.toResponse(entity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AppUserResponse> listAll() {
+        return repository.findAll()
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public AppUserResponse update(UUID id, UpdateAppUserRequest request) {
+        var entity = getEntityOrThrow(id);
+
+        if (request.name() != null) {
+            entity.setName(request.name().trim());
+        }
+
+        if (request.email() != null) {
+            var email = request.email().trim().toLowerCase();
+            if (!email.equals(entity.getEmail()) && repository.existsByEmail(email)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+            }
+            entity.setEmail(email);
+        }
+
+        if (request.active() != null) {
+            entity.setActive(request.active());
+        }
+
+        return mapper.toResponse(repository.save(entity));
+    }
+
+    @Override
+    @Transactional
+    public void updatePassword(UUID id, UpdatePasswordRequest request) {
+        var entity = getEntityOrThrow(id);
+        entity.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        repository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void deactivate(UUID id) {
+        var entity = getEntityOrThrow(id);
+        entity.setActive(false);
+        repository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void recordLogin(UUID id, LocalDateTime loginAt) {
+        var entity = getEntityOrThrow(id);
+        entity.setLastLogin(loginAt != null ? loginAt : LocalDateTime.now());
+        repository.save(entity);
+    }
+
+    private AppUserEntity getEntityOrThrow(UUID id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    }
+}
