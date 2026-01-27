@@ -17,6 +17,7 @@ import br.gov.mt.seplag.igorzannattasaraiva032377.exception.ConflictException;
 import br.gov.mt.seplag.igorzannattasaraiva032377.exception.ResourceNotFoundException;
 import br.gov.mt.seplag.igorzannattasaraiva032377.mapper.user.AppUserMapper;
 import br.gov.mt.seplag.igorzannattasaraiva032377.repository.user.AppUserRepository;
+import br.gov.mt.seplag.igorzannattasaraiva032377.service.auditLog.AuditLogService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -26,6 +27,7 @@ public class AppUserServiceImpl implements AppUserService {
     private final AppUserRepository repository;
     private final AppUserMapper mapper;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -44,7 +46,17 @@ public class AppUserServiceImpl implements AppUserService {
                 .build();
 
         var saved = repository.save(entity);
-        return mapper.toResponse(saved);
+        var response = mapper.toResponse(saved);
+
+        auditLogService.log(
+            "AppUserEntity",
+            saved.getId().toString(),
+            "CREATE",
+            null,
+            response
+        );
+
+        return response;
     }
 
     @Override
@@ -77,6 +89,7 @@ public class AppUserServiceImpl implements AppUserService {
     @Transactional
     public AppUserResponse update(UUID id, UpdateAppUserRequest request) {
         var entity = getEntityOrThrow(id);
+        var before = mapper.toResponse(entity);
 
         if (request.name() != null) {
             entity.setName(request.name().trim());
@@ -94,7 +107,18 @@ public class AppUserServiceImpl implements AppUserService {
             entity.setActive(request.active());
         }
 
-        return mapper.toResponse(repository.save(entity));
+        var saved = repository.save(entity);
+        var after = mapper.toResponse(saved);
+
+        auditLogService.log(
+            "AppUserEntity",
+            saved.getId().toString(),
+            "UPDATE",
+            before,
+            after
+        );
+
+        return after;
     }
 
     @Override
@@ -103,6 +127,14 @@ public class AppUserServiceImpl implements AppUserService {
         var entity = getEntityOrThrow(id);
         entity.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         repository.save(entity);
+
+        auditLogService.log(
+            "AppUserEntity",
+            entity.getId().toString(),
+            "UPDATE_PASSWORD",
+            null,
+            null
+        );
     }
 
     @Override
@@ -111,6 +143,14 @@ public class AppUserServiceImpl implements AppUserService {
         var entity = getEntityOrThrow(id);
         entity.setActive(false);
         repository.save(entity);
+
+        auditLogService.log(
+            "AppUserEntity",
+            entity.getId().toString(),
+            "DEACTIVATE",
+            null,
+            null
+        );
     }
 
     @Override
@@ -119,6 +159,14 @@ public class AppUserServiceImpl implements AppUserService {
         var entity = getEntityOrThrow(id);
         entity.setLastLogin(loginAt != null ? loginAt : LocalDateTime.now());
         repository.save(entity);
+
+        auditLogService.log(
+            "AppUserEntity",
+            entity.getId().toString(),
+            "RECORD_LOGIN",
+            null,
+            null
+        );
     }
 
     private AppUserEntity getEntityOrThrow(UUID id) {
