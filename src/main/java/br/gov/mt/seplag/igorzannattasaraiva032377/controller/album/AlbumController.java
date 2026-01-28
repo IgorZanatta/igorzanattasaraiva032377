@@ -1,8 +1,9 @@
 package br.gov.mt.seplag.igorzannattasaraiva032377.controller.album;
 
-import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,17 +41,18 @@ public class AlbumController {
     }
 
     @GetMapping
-    public List<AlbumResponseDTO> findAll(
+    public Page<AlbumResponseDTO> findAll(
             @RequestParam(required = false) String title,
-            @RequestParam(required = false) Integer year
+            @RequestParam(required = false) Integer year,
+            Pageable pageable
     ) {
         if (title != null) {
-            return albumService.findByTitle(title);
+            return albumService.findByTitle(title, pageable);
         }
         if (year != null) {
-            return albumService.findByReleaseYear(year);
+            return albumService.findByReleaseYear(year, pageable);
         }
-        return albumService.findAll();
+        return albumService.findAll(pageable);
     }
 
     @PutMapping("/{id}")
