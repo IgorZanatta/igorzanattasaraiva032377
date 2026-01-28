@@ -1,12 +1,13 @@
 package br.gov.mt.seplag.igorzannattasaraiva032377.repository.album;
 
-import br.gov.mt.seplag.igorzannattasaraiva032377.entity.album.AlbumEntity;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-import java.util.UUID;
+import br.gov.mt.seplag.igorzannattasaraiva032377.entity.album.AlbumEntity;
 
 public interface AlbumRepository extends JpaRepository<AlbumEntity, UUID> {
 
