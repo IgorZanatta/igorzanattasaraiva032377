@@ -15,10 +15,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.response.AlbumResponseDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.artist.request.ArtistRequestDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.artist.response.ArtistResponseDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.entity.artist.ArtistType;
+import br.gov.mt.seplag.igorzannattasaraiva032377.service.album.AlbumService;
 import br.gov.mt.seplag.igorzannattasaraiva032377.service.artist.ArtistService;
+import br.gov.mt.seplag.igorzannattasaraiva032377.service.artistAlbum.ArtistAlbumService;
+import br.gov.mt.seplag.igorzannattasaraiva032377.service.artistGenre.ArtistGenreService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +32,9 @@ import lombok.RequiredArgsConstructor;
 public class ArtistController {
 
     private final ArtistService service;
+    private final ArtistAlbumService artistAlbumService;
+    private final ArtistGenreService artistGenreService;
+    private final AlbumService albumService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -67,5 +74,42 @@ public class ArtistController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {
         service.delete(id);
+    }
+
+
+    @GetMapping("/{artistId}/albums")
+    public List<AlbumResponseDTO> getAlbumsByArtist(@PathVariable UUID artistId) {
+        var albumIds = artistAlbumService.getAlbumIdsByArtist(artistId);
+        return albumIds.stream()
+                .map(albumService::findById)
+                .toList();
+    }
+
+
+    @PostMapping("/{artistId}/albums/{albumId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void addAlbumToArtist(
+            @PathVariable UUID artistId,
+            @PathVariable UUID albumId
+    ) {
+        artistAlbumService.linkArtistToAlbum(artistId, albumId);
+    }
+
+    @DeleteMapping("/{artistId}/albums/{albumId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeAlbumFromArtist(
+            @PathVariable UUID artistId,
+            @PathVariable UUID albumId
+    ) {
+        artistAlbumService.unlinkArtistFromAlbum(artistId, albumId);
+    }
+
+    @DeleteMapping("/{artistId}/genres/{genreId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeGenreFromArtist(
+            @PathVariable UUID artistId,
+            @PathVariable UUID genreId
+    ) {
+        artistGenreService.unlinkArtistFromGenre(artistId, genreId);
     }
 }
