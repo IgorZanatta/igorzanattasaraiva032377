@@ -123,6 +123,27 @@ http://localhost:8080/ws-test.html
 
 Ao cadastrar um novo álbum por meio da API, o evento será imediatamente exibido na tela, validando o envio e o recebimento das notificações em tempo real.
 
+## Health Checks, Liveness e Readiness
+
+A aplicação expõe endpoints de verificação de saúde (*Health Checks*) utilizando o **Spring Boot Actuator**, permitindo que ferramentas de monitoramento e infraestrutura verifiquem o estado da API.
+
+Os seguintes endpoints estão disponíveis após a inicialização da aplicação:
+
+- Health Check geral:
+
+http://localhost:8080/actuator/health
+
+- Liveness Probe (verifica se a aplicação está viva):
+
+http://localhost:8080/actuator/health/liveness
+
+- Readiness Probe (verifica se a aplicação está pronta para receber requisições):
+
+http://localhost:8080/actuator/health/readiness
+
+Esses endpoints estão expostos sem autenticação, conforme boas práticas, para permitir monitoramento e verificação de disponibilidade da aplicação.
+
+
 ## Observações
 
 O banco de dados e o armazenamento de arquivos utilizam volumes Docker para persistência.
