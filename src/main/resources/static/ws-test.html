@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Demo – Novos Álbuns</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+    }
+    #status {
+      margin-bottom: 16px;
+      font-weight: bold;
+    }
+    .connected {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>WebSocket – Notificação de Novos Álbuns</h1>
+
+<p>
+  Esta página tem como objetivo demonstrar o funcionamento do WebSocket da API,
+  exibindo eventos sempre que um novo álbum é cadastrado.
+</p>
+
+<div id="status">Conectando ao WebSocket...</div>
+
+<ul id="messages"></ul>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script>
+  const statusEl = document.getElementById('status');
+  const messagesEl = document.getElementById('messages');
+
+  function addMessage(text) {
+    const li = document.createElement('li');
+    const time = new Date().toLocaleTimeString();
+    li.textContent = `[${time}] ${text}`;
+    messagesEl.appendChild(li);
+  }
+
+  const socket = new SockJS('http://localhost:8080/ws');
+  const stompClient = Stomp.over(socket);
+
+  // Desliga logs excessivos do STOMP
+  stompClient.debug = null;
+
+  stompClient.connect({}, frame => {
+    statusEl.textContent = 'Conectado ao WebSocket';
+    statusEl.className = 'connected';
+
+    stompClient.subscribe('/topic/albums/new', message => {
+      try {
+        const payload = JSON.parse(message.body);
+        const title = payload.title || payload.name || 'Dados recebidos';
+        addMessage(`Novo álbum cadastrado: ${title}`);
+        console.log('Evento recebido:', payload);
+      } catch (err) {
+        console.error('Erro ao processar mensagem:', err);
+        addMessage('Erro ao processar mensagem recebida');
+      }
+    });
+
+  }, error => {
+    console.error('Erro na conexão WebSocket:', error);
+    statusEl.textContent = 'Erro ao conectar ao WebSocket (ver console)';
+    statusEl.className = 'error';
+  });
+</script>
+
+</body>
+</html>
