@@ -63,6 +63,7 @@ public class WebSecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/", "/index.html", "/ws-test.html", "/static/**", "/css/**", "/js/**", "/webjars/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated());
