@@ -73,7 +73,7 @@ O PostgreSQL estará disponível na porta **5432**, permitindo acesso via ferram
 
 ## Comandos úteis
 
-Para ver os log da aplicação:
+Para visualizar os logs da aplicação:
 
 ```bash
 docker logs -f artists_api
@@ -111,6 +111,34 @@ docker compose up --build -d api
 
 ---
 
+## Demonstração do MinIO
+
+Para comprovar o funcionamento do armazenamento de arquivos, a aplicação utiliza o MinIO para persistir as capas de álbuns.
+
+As URLs pré-assinadas possuem validade temporária e expiram automaticamente após o período configurado.
+
+Os arquivos são armazenados em um bucket privado e o acesso é realizado por meio de URLs pré-assinadas, geradas pela própria API, permitindo o download temporário das capas sem a exposição de credenciais de acesso.
+
+Durante os testes, foi validado que o download ocorre corretamente quando a URL pré-assinada é utilizada conforme gerada pela aplicação. Requisições realizadas com métodos HTTP diferentes do método assinado são rejeitadas pelo MinIO, confirmando o funcionamento esperado do mecanismo de segurança.
+
+A validação do funcionamento pode ser realizada a partir do terminal, diretamente no container da aplicação:
+
+```bash
+docker exec -it artists_api sh
+```
+
+```bash
+curl -O "URL_PRE_ASSINADA_GERADA_PELA_API"
+```
+
+O MinIO também disponibiliza uma interface web administrativa, acessível pelo navegador em:
+
+http://localhost:9001/
+
+Nessa interface, é possível realizar o login utilizando as credenciais configuradas no ambiente da aplicação, permitindo a visualização dos buckets e dos arquivos armazenados.
+
+---
+
 ## Demonstração do WebSocket
 
 Para comprovar o funcionamento do WebSocket responsável por notificar o front-end a cada novo álbum cadastrado, foi disponibilizado um arquivo HTML simples, acessível diretamente pela própria API.
@@ -122,6 +150,8 @@ Após subir a aplicação, a demonstração pode ser acessada em:
 http://localhost:8080/ws-test.html
 
 Ao cadastrar um novo álbum por meio da API, o evento será imediatamente exibido na tela, validando o envio e o recebimento das notificações em tempo real.
+
+---
 
 ## Health Checks, Liveness e Readiness
 
@@ -143,6 +173,7 @@ http://localhost:8080/actuator/health/readiness
 
 Esses endpoints estão expostos sem autenticação, conforme boas práticas, para permitir monitoramento e verificação de disponibilidade da aplicação.
 
+---
 
 ## Observações
 
