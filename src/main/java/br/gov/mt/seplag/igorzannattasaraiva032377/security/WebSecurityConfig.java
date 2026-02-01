@@ -59,6 +59,11 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    public RateLimitingFilter rateLimitingFilter() {
+        return new RateLimitingFilter();
+    }
+
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
@@ -81,7 +86,7 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, AuthFilterToken authFilterToken, DaoAuthenticationProvider authenticationProvider) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, AuthFilterToken authFilterToken, DaoAuthenticationProvider authenticationProvider, RateLimitingFilter rateLimitingFilter) throws Exception {
 
         http.cors(Customizer.withDefaults());
         http.csrf(csrf -> csrf.disable())
@@ -98,6 +103,7 @@ public class WebSecurityConfig {
 
         http.authenticationProvider(authenticationProvider);
         http.addFilterBefore(authFilterToken, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(rateLimitingFilter, AuthFilterToken.class);
 
         return http.build();
     }
