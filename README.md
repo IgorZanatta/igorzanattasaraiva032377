@@ -111,6 +111,18 @@ docker compose up --build -d api
 
 ---
 
+## Demonstração do WebSocket
+
+Para comprovar o funcionamento do WebSocket responsável por notificar o front-end a cada novo álbum cadastrado, foi disponibilizado um arquivo HTML simples, acessível diretamente pela própria API.
+
+Esse arquivo tem como único objetivo demonstrar, de forma objetiva, a comunicação em tempo real via WebSocket, sem a implementação de um front-end completo, uma vez que o escopo do projeto é exclusivamente back-end.
+
+Após subir a aplicação, a demonstração pode ser acessada em:
+
+http://localhost:8080/ws-test.html
+
+Ao cadastrar um novo álbum por meio da API, o evento será imediatamente exibido na tela, validando o envio e o recebimento das notificações em tempo real.
+
 ## Observações
 
 O banco de dados e o armazenamento de arquivos utilizam volumes Docker para persistência.
