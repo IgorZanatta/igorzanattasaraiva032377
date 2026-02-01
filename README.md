@@ -111,6 +111,75 @@ docker compose up --build -d api
 
 ---
 
+## Testes automatizados
+
+A aplicação possui uma suíte de **testes unitários** construída com **JUnit 5** e **Mockito**, focada em validar as regras de negócio dos serviços sem subir o contexto completo do Spring Boot.
+
+### Como executar os testes
+
+No diretório raiz do projeto, execute:
+
+```bash
+./mvnw test
+```
+
+Ou, no Windows (caso o script `.cmd` seja utilizado):
+
+```bash
+mvnw.cmd test
+```
+
+Também é possível rodar testes específicos de uma classe, por exemplo:
+
+```bash
+./mvnw -Dtest=ArtistServiceImplTest test
+./mvnw -Dtest=AlbumServiceImplTest test
+```
+
+> Observação: existem alguns testes de integração que dependem do contexto completo do Spring e de infraestrutura (banco/Flyway). Esses testes foram anotados com `@Disabled` para que não impactem a execução dos testes unitários.
+
+### O que os testes cobrem
+
+Os testes foram organizados por serviço, cobrindo principalmente:
+
+- **Artistas e Álbuns**
+	- Criação, atualização, busca e paginação de artistas e álbuns.
+	- Validações de regras de negócio (ex.: entidades não encontradas, conflitos, etc.).
+	- Notificações via WebSocket quando um novo álbum é cadastrado.
+
+- **Relacionamentos N:N (Artista x Gênero / Artista x Álbum)**
+	- Criação e remoção de vínculos entre artistas e gêneros.
+	- Criação e remoção de vínculos entre artistas e álbuns.
+	- Tratamento de conflitos (vínculo já existente) e cenários de entidades não encontradas.
+
+- **Regionais**
+	- Sincronização de regionais com serviço externo (Argus).
+	- Inativação de regionais locais que não existem mais na fonte externa.
+	- Criação/atualização de regionais e mapeamento para DTOs de resposta.
+
+- **Capas de Álbuns (MinIO)**
+	- Upload de capas para o MinIO com definição de capa primária.
+	- Listagem de capas com geração de URLs pré-assinadas.
+	- Busca da capa primária de um álbum e tratamento de casos em que não existe.
+
+- **Usuários e Autenticação**
+	- Criação, atualização, desativação e registro de login de usuários (`AppUserServiceImpl`).
+	- Normalização de e-mail, validação de conflito de e-mail e uso do `PasswordEncoder`.
+	- Carregamento de usuários para autenticação (`UserDetailServiceImpl`).
+
+- **Gêneros Musicais**
+	- CRUD de gêneros, com ordenação por nome.
+	- Busca filtrada por nome com ordenação ascendente/descendente.
+
+- **Auditoria**
+	- Registro de logs de auditoria (`AuditLogServiceImpl`) com:
+		- Serialização de dados antigos/novos em JSON.
+		- Associação com o usuário autenticado, IP e User-Agent da requisição quando disponíveis.
+		- Garantia de que falhas de auditoria **não quebram** o fluxo principal da aplicação.
+
+Além disso, há testes específicos para **JWT** (`JwtUtils`), validando geração de tokens e tratamento de tokens expirados.
+
+
 ## Demonstração do MinIO
 
 Para comprovar o funcionamento do armazenamento de arquivos, a aplicação utiliza o MinIO para persistir as capas de álbuns.
