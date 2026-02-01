@@ -21,6 +21,7 @@ import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.response.AlbumPageRe
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.response.AlbumResponseDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.response.AlbumWithArtistsResponseDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.artist.response.ArtistResponseDTO;
+import br.gov.mt.seplag.igorzannattasaraiva032377.entity.artist.ArtistType;
 import br.gov.mt.seplag.igorzannattasaraiva032377.service.album.AlbumService;
 import br.gov.mt.seplag.igorzannattasaraiva032377.service.artist.ArtistService;
 import br.gov.mt.seplag.igorzannattasaraiva032377.service.artistAlbum.ArtistAlbumService;
@@ -52,24 +53,27 @@ public class AlbumController {
         return albumService.findAllWithArtists();
     }
 
-        @GetMapping
-        public AlbumPageResponseDTO findAll(
+    @GetMapping
+    public AlbumPageResponseDTO findAll(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) ArtistType artistType,
             Pageable pageable
     ) {
-        var page = (title != null)
-            ? albumService.findByTitle(title, pageable)
-            : (year != null)
-                ? albumService.findByReleaseYear(year, pageable)
-                : albumService.findAll(pageable);
+        var page = (artistType != null)
+                ? albumService.findByArtistType(artistType, pageable)
+                : (title != null)
+                    ? albumService.findByTitle(title, pageable)
+                    : (year != null)
+                        ? albumService.findByReleaseYear(year, pageable)
+                        : albumService.findAll(pageable);
 
         return new AlbumPageResponseDTO(
-            page.getContent(),
-            page.getNumber(),
-            page.getSize(),
-            page.getTotalElements(),
-            page.getTotalPages()
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
         );
     }
 
