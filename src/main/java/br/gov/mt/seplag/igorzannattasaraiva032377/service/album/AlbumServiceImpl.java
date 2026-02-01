@@ -58,6 +58,12 @@ public class AlbumServiceImpl implements AlbumService {
                 .map(AlbumMapper::toResponse);
     }
 
+    @Override
+    public Page<AlbumResponseDTO> findByArtistType(br.gov.mt.seplag.igorzannattasaraiva032377.entity.artist.ArtistType type, Pageable pageable) {
+        return albumRepository.findByArtistType(type, pageable)
+                .map(AlbumMapper::toResponse);
+    }
+
         @Override
         public List<AlbumWithArtistsResponseDTO> findAllWithArtists() {
         return albumRepository.findAll().stream()
