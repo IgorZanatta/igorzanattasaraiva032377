@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.request.AlbumRequestDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.response.AlbumPageResponseDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.response.AlbumResponseDTO;
+import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.response.AlbumWithArtistsResponseDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.artist.response.ArtistResponseDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.service.album.AlbumService;
 import br.gov.mt.seplag.igorzannattasaraiva032377.service.artist.ArtistService;
@@ -44,6 +45,11 @@ public class AlbumController {
     @GetMapping("/{id}")
     public AlbumResponseDTO findById(@PathVariable UUID id) {
         return albumService.findById(id);
+    }
+
+    @GetMapping("/artist")
+    public List<AlbumWithArtistsResponseDTO> findAllWithArtists() {
+        return albumService.findAllWithArtists();
     }
 
         @GetMapping
