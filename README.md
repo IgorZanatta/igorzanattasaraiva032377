@@ -331,7 +331,17 @@ Essa decisão foi tomada para manter a API aderente ao escopo do edital, cujo do
 
 Para fins de teste e validação da API, um usuário padrão é criado automaticamente via Flyway Migrations, conforme descrito na seção de autenticação.
 
+### Artistas
 
+O módulo de Artistas foi implementado com foco exclusivo nos requisitos definidos no edital.  
+Foram mantidos apenas os endpoints essenciais para criação, atualização e consulta de artistas com filtros e ordenação, evitando a exposição de um CRUD genérico.
+
+Relacionamentos com gêneros são tratados diretamente nos fluxos de criação e atualização do artista, eliminando a necessidade de endpoints dedicados para gerenciamento manual desses vínculos.  
+Da mesma forma, operações de exclusão e endpoints adicionais não previstos no edital foram removidos para manter a API simples, segura e aderente ao escopo avaliado.
+
+Os relacionamentos N:N existentes no modelo de dados são utilizados internamente pela aplicação e não são expostos como recursos REST independentes.
+
+Essa abordagem reduz ambiguidade de domínio, evita funcionalidades desnecessárias e reforça o princípio de soluções simples, conforme os critérios de avaliação.
 
 ---
 ## Implementações Futuras
