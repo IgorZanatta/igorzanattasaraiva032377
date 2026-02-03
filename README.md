@@ -71,6 +71,66 @@ O PostgreSQL estará disponível na porta **5432**, permitindo acesso via ferram
 
 ---
 
+## Documentação da API (Swagger / OpenAPI)
+
+A documentação interativa da API é gerada automaticamente via **springdoc-openapi** e exposta pelo Swagger UI.
+
+- **Swagger UI**: interface gráfica para explorar e testar os endpoints
+
+	http://localhost:8080/swagger-ui.html
+
+	ou
+
+	http://localhost:8080/swagger-ui/index.html
+
+- **Documento OpenAPI em JSON** (utilizado pelo próprio Swagger UI e por ferramentas externas):
+
+	http://localhost:8080/v3/api-docs
+
+### Como testar a API pelo Swagger
+
+1. Acesse o Swagger UI em um dos links acima.
+2. Os endpoints estarão organizados por grupos (auth, users, artists, albums, etc.).
+3. Para testar um endpoint:
+	 - Clique sobre o endpoint desejado.
+	 - Clique em **"Try it out"**.
+	 - Preencha os parâmetros ou o corpo da requisição.
+	 - Clique em **"Execute"** para enviar a requisição diretamente para a API.
+
+### Autenticação via Swagger (JWT)
+
+Alguns endpoints são protegidos e exigem **token JWT**. Para utilizá-los pelo Swagger:
+
+1. Obtenha um token de acesso usando o endpoint de login:
+	 - Endpoint: `POST /api/v1/auth/login`
+	 - Body (exemplo):
+
+		 ```json
+		 {
+			 "email": "seu.email@dominio.com",
+			 "password": "sua_senha"
+		 }
+		 ```
+
+	 - A resposta conterá um `accessToken` e um `refreshToken`.
+
+2. Configure o token no botão **"Authorize"** do Swagger UI:
+	 - Clique em **"Authorize"** (ícone de cadeado no topo da página).
+	 - No campo de valor, preencha:
+
+		 ```
+		 Bearer SEU_ACCESS_TOKEN_AQUI
+		 ```
+
+	 - Clique em **"Authorize"** e depois em **"Close"**.
+
+3. A partir desse momento, todas as requisições feitas pelo Swagger para endpoints protegidos irão incluir o cabeçalho `Authorization` com o token JWT informado.
+
+4. Para renovar o token quando ele expirar, utilize o endpoint:
+	 - `POST /api/v1/auth/refresh`, enviando o `refreshToken` no corpo ou no cabeçalho `Authorization` (Bearer).
+
+---
+
 ## Comandos úteis
 
 Para visualizar os logs da aplicação:
