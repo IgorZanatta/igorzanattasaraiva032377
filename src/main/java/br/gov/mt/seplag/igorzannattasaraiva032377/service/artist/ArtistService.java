@@ -11,15 +11,11 @@ public interface ArtistService {
 
     ArtistResponseDTO create(ArtistRequestDTO dto);
 
-    ArtistResponseDTO findById(UUID id);
-
-    List<ArtistResponseDTO> findAll();
-
-    List<ArtistResponseDTO> findByName(String name, String sortDirection);
-
-    List<ArtistResponseDTO> findByType(ArtistType type);
+    /**
+     * Lista artistas aplicando opcionalmente filtro por nome (parcial), tipo e ordenação por nome.
+     * Sempre ordena pelo campo name, ascendente por padrão e descendente quando sort = "desc".
+     */
+    List<ArtistResponseDTO> findAll(String name, ArtistType type, String sort);
 
     ArtistResponseDTO update(UUID id, ArtistRequestDTO dto);
-
-    void delete(UUID id);
 }

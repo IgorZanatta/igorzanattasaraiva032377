@@ -40,43 +40,31 @@ public class ArtistServiceImpl implements ArtistService {
     }
 
     @Override
-    public ArtistResponseDTO findById(UUID id) {
-        ArtistEntity entity = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Artist not found"));
-        return buildResponseWithGenres(entity);
-    }
+    public List<ArtistResponseDTO> findAll(String name, ArtistType type, String sort) {
+        // Normaliza sort: default asc, desc quando explicitamente "desc"
+        String direction = (sort == null || sort.isBlank()) ? "asc" : sort;
 
-    @Override
-    public List<ArtistResponseDTO> findAll() {
-        return repository.findAll()
-                .stream()
-                .map(this::buildResponseWithGenres)
-                .toList();
-    }
+        List<ArtistEntity> entities;
 
-    @Override
-    public List<ArtistResponseDTO> findByName(String name, String sortDirection) {
-        var entities = repository.findByNameContainingIgnoreCase(name);
+        if (name != null && !name.isBlank()) {
+            entities = repository.findByNameContainingIgnoreCase(name);
+        } else if (type != null) {
+            entities = repository.findByType(type);
+        } else {
+            entities = repository.findAll();
+        }
 
         Comparator<ArtistEntity> comparator = Comparator.comparing(
                 ArtistEntity::getName,
                 String.CASE_INSENSITIVE_ORDER
         );
 
-        if (sortDirection != null && sortDirection.equalsIgnoreCase("desc")) {
+        if ("desc".equalsIgnoreCase(direction)) {
             comparator = comparator.reversed();
         }
 
         return entities.stream()
                 .sorted(comparator)
-                .map(this::buildResponseWithGenres)
-                .toList();
-    }
-
-    @Override
-    public List<ArtistResponseDTO> findByType(ArtistType type) {
-        return repository.findByType(type)
-                .stream()
                 .map(this::buildResponseWithGenres)
                 .toList();
     }
@@ -96,14 +84,6 @@ public class ArtistServiceImpl implements ArtistService {
         }
 
         return buildResponseWithGenres(entity);
-    }
-
-    @Override
-    public void delete(UUID id) {
-        if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Artist not found");
-        }
-        repository.deleteById(id);
     }
 
     private ArtistResponseDTO buildResponseWithGenres(ArtistEntity entity) {

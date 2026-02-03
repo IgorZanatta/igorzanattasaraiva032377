@@ -91,7 +91,7 @@ class ArtistServiceImplTest {
     }
 
     @Test
-    void findByName_shouldSearchByNameAndReturnMappedResponses() {
+    void findAll_shouldSearchByNameAndReturnMappedResponses() {
         UUID id = UUID.randomUUID();
         ArtistEntity entity = ArtistEntity.builder()
                 .id(id)
@@ -103,7 +103,7 @@ class ArtistServiceImplTest {
                 .thenReturn(List.of(entity));
         when(artistGenreService.getGenreIdsByArtist(id)).thenReturn(List.of());
 
-        var result = artistService.findByName("metal", null);
+        var result = artistService.findAll("metal", null, null);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -117,7 +117,7 @@ class ArtistServiceImplTest {
     }
 
     @Test
-    void findByName_shouldSortAlphabeticallyAscendingWhenSortDirectionIsNull() {
+    void findAll_shouldSortAlphabeticallyAscendingWhenSortDirectionIsNull() {
         ArtistEntity a = ArtistEntity.builder().id(UUID.randomUUID()).name("Charlie").type(ArtistType.SOLO).build();
         ArtistEntity b = ArtistEntity.builder().id(UUID.randomUUID()).name("alice").type(ArtistType.SOLO).build();
         ArtistEntity c = ArtistEntity.builder().id(UUID.randomUUID()).name("Bob").type(ArtistType.SOLO).build();
@@ -126,7 +126,7 @@ class ArtistServiceImplTest {
                 .thenReturn(List.of(a, b, c));
         when(artistGenreService.getGenreIdsByArtist(any())).thenReturn(List.of());
 
-        var result = artistService.findByName("a", null);
+        var result = artistService.findAll("a", null, null);
 
         assertEquals(3, result.size());
         assertEquals("alice", result.get(0).name());
@@ -135,7 +135,7 @@ class ArtistServiceImplTest {
     }
 
     @Test
-    void findByName_shouldSortAlphabeticallyDescendingWhenSortDirectionIsDesc() {
+        void findAll_shouldSortAlphabeticallyDescendingWhenSortDirectionIsDesc() {
         ArtistEntity a = ArtistEntity.builder().id(UUID.randomUUID()).name("Charlie").type(ArtistType.SOLO).build();
         ArtistEntity b = ArtistEntity.builder().id(UUID.randomUUID()).name("alice").type(ArtistType.SOLO).build();
         ArtistEntity c = ArtistEntity.builder().id(UUID.randomUUID()).name("Bob").type(ArtistType.SOLO).build();
@@ -144,7 +144,7 @@ class ArtistServiceImplTest {
                 .thenReturn(List.of(a, b, c));
         when(artistGenreService.getGenreIdsByArtist(any())).thenReturn(List.of());
 
-        var result = artistService.findByName("a", "DESC");
+        var result = artistService.findAll("a", null, "DESC");
 
         assertEquals(3, result.size());
         assertEquals("Charlie", result.get(0).name());
