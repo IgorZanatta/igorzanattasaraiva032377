@@ -4,6 +4,8 @@ Projeto desenvolvido para o **Processo Seletivo – SEPLAG MT**, com foco em bac
 
 A aplicação consiste em uma API REST para gerenciamento de artistas e álbuns, utilizando banco de dados relacional e armazenamento de arquivos, com ambiente totalmente containerizado via Docker.
 
+A aplicação segue uma arquitetura em camadas, separando responsabilidades entre controllers (camada de exposição), services (regras de negócio), repositories (persistência) e entities (modelo de domínio). DTOs e mappers são utilizados para desacoplar o domínio da camada de transporte.
+
 ---
 
 ## Tecnologias Utilizadas
@@ -90,7 +92,7 @@ A documentação interativa da API é gerada automaticamente via **springdoc-ope
 ### Como testar a API pelo Swagger
 
 1. Acesse o Swagger UI em um dos links acima.
-2. Os endpoints estarão organizados por grupos (auth, users, artists, albums, etc.).
+2. Os endpoints estarão organizados por grupos (auth, artists, albums, regionals, etc.).
 3. Para testar um endpoint:
 	 - Clique sobre o endpoint desejado.
 	 - Clique em **"Try it out"**.
@@ -105,12 +107,15 @@ Alguns endpoints são protegidos e exigem **token JWT**. Para utilizá-los pelo 
 	 - Endpoint: `POST /api/v1/auth/login`
 	 - Body (exemplo):
 
-		 ```json
-		 {
-			 "email": "seu.email@dominio.com",
-			 "password": "sua_senha"
-		 }
-		 ```
+### Usuário padrão para testes
+
+Para facilitar a validação da API, a aplicação cria automaticamente um usuário padrão via Flyway Migrations:
+
+- **Email:** test@example.com
+- **Senha:** Password123
+
+Esse usuário é utilizado apenas para autenticação e testes da API, não havendo endpoints públicos para gerenciamento de usuários.
+
 
 	 - A resposta conterá um `accessToken` e um `refreshToken`.
 
@@ -223,9 +228,9 @@ Os testes foram organizados por serviço, cobrindo principalmente:
 	- Busca da capa primária de um álbum e tratamento de casos em que não existe.
 
 - **Usuários e Autenticação**
-	- Criação, atualização, desativação e registro de login de usuários (`AppUserServiceImpl`).
-	- Normalização de e-mail, validação de conflito de e-mail e uso do `PasswordEncoder`.
-	- Carregamento de usuários para autenticação (`UserDetailServiceImpl`).
+    - Validação do fluxo de autenticação (login, refresh e logout).
+    - Registro de login do usuário.
+    - Normalização de e-mail e carregamento de usuários para autenticação (`UserDetailsServiceImpl`).
 
 - **Gêneros Musicais**
 	- CRUD de gêneros, com ordenação por nome.
@@ -304,6 +309,37 @@ Esses endpoints estão expostos sem autenticação, conforme boas práticas, par
 
 ---
 
+## Autenticação e Segurança
+
+A aplicação utiliza autenticação baseada em JWT, com access token de curta duração (5 minutos) e refresh token para renovação segura da sessão.
+
+O processo de refresh token rotation é implementado, garantindo que tokens antigos sejam invalidados após a renovação.
+
+Para reforçar a segurança, a aplicação mantém uma blacklist de tokens inválidos, utilizada tanto no fluxo de refresh quanto no logout.
+
+Endpoints de autenticação são públicos apenas quando necessário, mantendo os demais protegidos por Spring Security.
+
+---
+
+## Decisões de Arquitetura e Escopo
+
+### Gerenciamento de Usuários
+
+Embora a aplicação utilize um modelo de usuário para autenticação e controle de acesso (JWT e Rate Limit), não há endpoints públicos para gerenciamento de usuários.
+
+Essa decisão foi tomada para manter a API aderente ao escopo do edital, cujo domínio é focado exclusivamente em Artistas e Álbuns. Expor CRUD de usuários não agrega valor aos casos de uso avaliados e aumentaria desnecessariamente a superfície de ataque da aplicação.
+
+Para fins de teste e validação da API, um usuário padrão é criado automaticamente via Flyway Migrations, conforme descrito na seção de autenticação.
+
+
+
+---
+## Implementações Futuras
+
+O modelo de usuário foi implementado como infraestrutura interna de autenticação. Caso haja necessidade futura de gerenciamento de usuários, a arquitetura já permite a exposição controlada desses endpoints sem impacto nas regras de negócio existentes, mantendo a separação de responsabilidades e a segurança da aplicação.
+
+
+---
 ## Observações
 
 O banco de dados e o armazenamento de arquivos utilizam volumes Docker para persistência.
