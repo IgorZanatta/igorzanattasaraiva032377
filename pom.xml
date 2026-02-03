@@ -30,6 +30,8 @@
 		<java.version>21</java.version>
 	</properties>
 	<dependencies>
+		<!-- Força a versão do Spring Boot utilizada em tempo de execução
+		     para evitar conflitos de versões vindos de dependências transitivas -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -84,13 +86,12 @@
 			<version>1.5.5.Final</version>
 			<scope>provided</scope>
 		</dependency>
-        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-            <version>3.5.9</version>
-            <scope>compile</scope>
-        </dependency>
+		<!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+			<scope>compile</scope>
+		</dependency>
         <!-- Source: https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -131,6 +132,11 @@
 			<artifactId>bucket4j_jdk17-core</artifactId>
 			<version>8.16.0</version>
 		</dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.7.0</version>
+        </dependency>
     </dependencies>
 
 	<build>
