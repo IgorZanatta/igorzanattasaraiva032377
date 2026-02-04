@@ -39,6 +39,18 @@ O projeto utiliza variáveis de ambiente centralizadas no arquivo `.env`.
 Certifique-se de que o arquivo `.env` esteja presente na raiz do projeto antes de executar os comandos.  
 Esse arquivo já contém todas as configurações necessárias para banco de dados, MinIO e autenticação JWT.
 
+### Variáveis de ambiente
+
+O arquivo `.env` não é versionado e está incluído no `.gitignore`, pois contém informações sensíveis.
+
+Para facilitar a execução do projeto, foi disponibilizado um arquivo `.env.example`, contendo todas as variáveis necessárias com valores de exemplo.
+
+Antes de subir a aplicação, copie o arquivo:
+
+```bash
+cp .env.example .env
+```
+
 ---
 
 ## Como executar o projeto
@@ -107,8 +119,8 @@ A documentação interativa da API é gerada automaticamente via **springdoc-ope
 Alguns endpoints são protegidos e exigem **token JWT**. Para utilizá-los pelo Swagger:
 
 1. Obtenha um token de acesso usando o endpoint de login:
-	 - Endpoint: `POST /api/v1/auth/login`
-	 - Body (exemplo):
+	
+     - Endpoint: `POST /api/v1/auth/login`
 
 ### Usuário padrão para testes
 
@@ -328,25 +340,152 @@ Endpoints de autenticação são públicos apenas quando necessário, mantendo o
 
 ### Gerenciamento de Usuários
 
-Embora a aplicação utilize um modelo de usuário para autenticação e controle de acesso (JWT e Rate Limit), não há endpoints públicos para gerenciamento de usuários.
+O modelo de usuário é utilizado exclusivamente como infraestrutura de autenticação e controle de acesso (JWT e Rate Limit).
 
-Essa decisão foi tomada para manter a API aderente ao escopo do edital, cujo domínio é focado exclusivamente em Artistas e Álbuns. Expor CRUD de usuários não agrega valor aos casos de uso avaliados e aumentaria desnecessariamente a superfície de ataque da aplicação.
+Não há endpoints públicos para gerenciamento de usuários, pois o edital tem como foco o domínio de Artistas e Álbuns. Expor CRUD de usuários não agregaria valor aos casos de uso avaliados e aumentaria desnecessariamente a superfície de ataque da aplicação.
 
-Para fins de teste e validação da API, um usuário padrão é criado automaticamente via Flyway Migrations, conforme descrito na seção de autenticação.
+Para facilitar testes e validação da API, um usuário padrão é criado automaticamente via Flyway Migrations.
+
+---
 
 ### Artistas
 
-Os endpoints de Artistas foram limitados a criação, atualização e consultas com filtros e ordenação, conforme definido no edital.  
-Operações de remoção e gerenciamento manual de relacionamentos não foram expostas para evitar ambiguidade de domínio e manter a API simples e focada nos casos de uso avaliados.
+O módulo de Artistas representa uma entidade central do domínio.
 
+Foram expostos apenas endpoints de criação, atualização e listagem, com filtros por nome, tipo e ordenação alfabética, conforme solicitado no edital.
+Operações de remoção não foram expostas para evitar ambiguidades de domínio e preservar consistência histórica.
+
+Os relacionamentos com álbuns e gêneros são tratados de forma controlada, evitando que a API se torne excessivamente permissiva ou complexa.
+
+---
+
+### Álbuns
+
+O módulo de Álbuns implementa criação, atualização, remoção e listagem paginada, atendendo diretamente aos requisitos do edital.
+
+A listagem suporta filtros individuais por:
+
+- título (busca parcial),
+
+- ano de lançamento,
+
+- tipo de artista associado (SOLO ou BAND).
+
+A paginação e ordenação são realizadas via Spring Data Pageable.
+
+Consultas por ID e listagens agregadas com artistas foram removidas para manter consistência com o módulo de Artistas e evitar operações fora do escopo principal avaliado.
+
+A criação de um álbum dispara uma notificação via WebSocket, permitindo comunicação em tempo real com o front-end.
+
+---
+
+### Gêneros Musicais
+
+O módulo de Gêneros foi implementado como um catálogo de apoio, permitindo a categorização de artistas por estilo musical.
+
+Foram mantidos apenas endpoints de criação e listagem, com busca por nome e ordenação alfabética.
+Não há operações de remoção ou atualização expostas, seguindo a mesma estratégia de simplificação aplicada aos demais módulos.
+
+O relacionamento entre artistas e gêneros é modelado via tabela de junção N:N, permitindo flexibilidade e futuras extensões sem impactar o domínio principal.
+
+---
+
+### Capas de Álbuns
+
+As capas de álbuns são tratadas em um módulo específico e armazenadas externamente no MinIO, com apenas as referências persistidas no banco de dados.
+
+A implementação garante que:
+
+- a primeira capa enviada seja automaticamente definida como capa primária,
+
+- URLs pré-assinadas sejam geradas com tempo de expiração,
+
+- o acesso aos arquivos seja controlado e seguro.
+
+Essa abordagem separa o armazenamento físico da lógica de negócio, favorecendo escalabilidade e segurança.
+
+---
+
+### Regionais
+
+O módulo de Regionais atende ao requisito sênior de sincronização com sistema externo.
+
+As regionais são importadas a partir do serviço Argus e mantidas localmente com controle de ativação.
+O processo de sincronização:
+
+- insere novos registros,
+
+- atualiza dados existentes,
+
+- inativa registros que não existem mais na fonte externa.
+
+Essa estratégia evita exclusões físicas e garante integridade referencial.
+
+---
+
+### Relacionamentos N:N
+
+A aplicação implementa relacionamentos muitos-para-muitos entre:
+
+- Artistas e Gêneros
+
+- Artistas e Álbuns
+
+Esses relacionamentos são modelados por tabelas de junção explícitas, com controle de duplicidade, integridade referencial e registro temporal do vínculo.
+
+A gestão dos vínculos é feita na camada de serviço, evitando a exposição desnecessária de endpoints técnicos.
+
+---
+
+### Auditoria
+
+A aplicação registra operações relevantes por meio de logs de auditoria, armazenando informações como:
+
+- entidade afetada,
+
+- tipo de operação,
+
+- estado anterior e novo,
+
+- usuário responsável e contexto da requisição.
+
+O mecanismo de auditoria é resiliente e não interfere no fluxo principal da aplicação em caso de falha, garantindo rastreabilidade sem comprometer disponibilidade.
 
 ---
 ## Implementações Futuras
 
-O modelo de usuário foi implementado como infraestrutura interna de autenticação. Caso haja necessidade futura de gerenciamento de usuários, a arquitetura já permite a exposição controlada desses endpoints sem impacto nas regras de negócio existentes, mantendo a separação de responsabilidades e a segurança da aplicação.
+A arquitetura foi projetada visando escalabilidade e evolução do domínio, permitindo a adição de novas funcionalidades sem impacto significativo nas regras de negócio existentes.
 
+Entre as possíveis evoluções estão:
+
+- Gerenciamento controlado de usuários, com definição de perfis e permissões, mantendo a separação entre infraestrutura de autenticação e regras de domínio.
+
+- Ampliação dos relacionamentos do domínio, como:
+
+  - associação de artistas a bandas,
+
+  - histórico de participação de artistas em bandas (período de atuação, ano de entrada e saída),
+
+  - suporte a múltiplos papéis de um artista ao longo do tempo.
+
+- Uso estratégico de soft delete, por meio do campo active, permitindo manter registros históricos relevantes para análises internas e auditoria, sem remoções físicas.
+
+- Expansão da auditoria, aproveitando os campos de createdAt e updatedAt para análises temporais, rastreabilidade completa e conformidade.
+
+- Evolução do uso de gêneros musicais, possibilitando análises mais detalhadas, como:
+
+  - gêneros mais associados a álbuns,
+
+  - tendências de estilos musicais ao longo do tempo,
+
+  - apoio a mecanismos de recomendação e busca avançada.
+
+- Relatórios e consultas analíticas, explorando dados históricos para apoiar tomada de decisão e visualização de métricas.
+
+Essas extensões podem ser implementadas de forma incremental, aproveitando a modelagem atual baseada em entidades bem definidas, relacionamentos explícitos e separação clara de responsabilidades.
 
 ---
+
 ## Observações
 
 O banco de dados e o armazenamento de arquivos utilizam volumes Docker para persistência.

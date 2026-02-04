@@ -22,25 +22,15 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.request.AlbumRequestDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.response.AlbumResponseDTO;
-import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.response.AlbumWithArtistsResponseDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.entity.album.AlbumEntity;
-import br.gov.mt.seplag.igorzannattasaraiva032377.entity.artist.ArtistEntity;
 import br.gov.mt.seplag.igorzannattasaraiva032377.entity.artist.ArtistType;
 import br.gov.mt.seplag.igorzannattasaraiva032377.repository.album.AlbumRepository;
-import br.gov.mt.seplag.igorzannattasaraiva032377.repository.artist.ArtistRepository;
-import br.gov.mt.seplag.igorzannattasaraiva032377.service.artistAlbum.ArtistAlbumService;
 
 @ExtendWith(MockitoExtension.class)
 class AlbumServiceImplTest {
 
     @Mock
     private AlbumRepository albumRepository;
-
-    @Mock
-    private ArtistAlbumService artistAlbumService;
-
-    @Mock
-    private ArtistRepository artistRepository;
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;
@@ -113,41 +103,5 @@ class AlbumServiceImplTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("Rock Band Album", result.getContent().get(0).title());
         verify(albumRepository).findByArtistType(type, pageable);
-    }
-
-    @Test
-    void findAllWithArtists_shouldReturnAlbumsWithAssociatedArtistNames() {
-        UUID albumId = UUID.randomUUID();
-        UUID artistId = UUID.randomUUID();
-
-        AlbumEntity album = AlbumEntity.builder()
-                .id(albumId)
-                .title("Collab Album")
-                .releaseYear(2020)
-                .build();
-
-        ArtistEntity artist = ArtistEntity.builder()
-                .id(artistId)
-                .name("Featured Artist")
-                .type(ArtistType.SOLO)
-                .build();
-
-        when(albumRepository.findAll()).thenReturn(List.of(album));
-        when(artistAlbumService.getArtistIdsByAlbum(albumId))
-                .thenReturn(List.of(artistId));
-        when(artistRepository.findAllById(List.of(artistId)))
-                .thenReturn(List.of(artist));
-
-        List<AlbumWithArtistsResponseDTO> result = albumService.findAllWithArtists();
-
-        assertEquals(1, result.size());
-        AlbumWithArtistsResponseDTO dto = result.get(0);
-        assertEquals(albumId, dto.id());
-        assertEquals("Collab Album", dto.title());
-        assertEquals(1, dto.artists().size());
-        assertEquals("Featured Artist", dto.artists().get(0));
-
-        verify(artistAlbumService).getArtistIdsByAlbum(albumId);
-        verify(artistRepository).findAllById(List.of(artistId));
     }
 }
