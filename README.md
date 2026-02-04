@@ -12,6 +12,9 @@ A aplicação segue uma arquitetura em camadas, separando responsabilidades entr
 
 - Java 21
 - Spring Boot
+- Spring Security
+- JWT
+- Flyway
 - PostgreSQL 16
 - MinIO
 - Docker e Docker Compose
@@ -233,7 +236,7 @@ Os testes foram organizados por serviço, cobrindo principalmente:
     - Normalização de e-mail e carregamento de usuários para autenticação (`UserDetailsServiceImpl`).
 
 - **Gêneros Musicais**
-	- CRUD de gêneros, com ordenação por nome.
+	- Criação e listagem de gêneros, com ordenação por nome.
 	- Busca filtrada por nome com ordenação ascendente/descendente.
 
 - **Auditoria**
@@ -333,15 +336,9 @@ Para fins de teste e validação da API, um usuário padrão é criado automatic
 
 ### Artistas
 
-O módulo de Artistas foi implementado com foco exclusivo nos requisitos definidos no edital.  
-Foram mantidos apenas os endpoints essenciais para criação, atualização e consulta de artistas com filtros e ordenação, evitando a exposição de um CRUD genérico.
+Os endpoints de Artistas foram limitados a criação, atualização e consultas com filtros e ordenação, conforme definido no edital.  
+Operações de remoção e gerenciamento manual de relacionamentos não foram expostas para evitar ambiguidade de domínio e manter a API simples e focada nos casos de uso avaliados.
 
-Relacionamentos com gêneros são tratados diretamente nos fluxos de criação e atualização do artista, eliminando a necessidade de endpoints dedicados para gerenciamento manual desses vínculos.  
-Da mesma forma, operações de exclusão e endpoints adicionais não previstos no edital foram removidos para manter a API simples, segura e aderente ao escopo avaliado.
-
-Os relacionamentos N:N existentes no modelo de dados são utilizados internamente pela aplicação e não são expostos como recursos REST independentes.
-
-Essa abordagem reduz ambiguidade de domínio, evita funcionalidades desnecessárias e reforça o princípio de soluções simples, conforme os critérios de avaliação.
 
 ---
 ## Implementações Futuras
