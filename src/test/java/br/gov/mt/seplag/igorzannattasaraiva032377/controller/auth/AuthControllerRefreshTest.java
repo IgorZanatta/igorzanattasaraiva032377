@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,7 +25,6 @@ import br.gov.mt.seplag.igorzannattasaraiva032377.service.user.UserDetailService
 import br.gov.mt.seplag.igorzannattasaraiva032377.service.user.UserDetailsImpl;
 
 @ExtendWith(MockitoExtension.class)
-@Disabled("Tem dependência de JwtUtils no classpath completo; manter desabilitado até configurar corretamente")
 class AuthControllerRefreshTest {
 
     @Mock
