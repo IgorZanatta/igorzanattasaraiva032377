@@ -193,7 +193,7 @@ docker compose up --build -d api
 
 ## Testes automatizados
 
-A aplicação possui uma suíte de **testes unitários** construída com **JUnit 5** e **Mockito**, focada em validar as regras de negócio dos serviços sem subir o contexto completo do Spring Boot.
+A aplicação possui **116 testes automatizados** com cobertura das principais regras de negócio e fluxos críticos, construídos com **JUnit 5**, **Mockito** e **H2 Database** para testes de integração.
 
 ### Como executar os testes
 
@@ -203,61 +203,52 @@ No diretório raiz do projeto, execute:
 ./mvnw test
 ```
 
-Ou, no Windows (caso o script `.cmd` seja utilizado):
+Ou, no Windows:
 
 ```bash
 mvnw.cmd test
 ```
 
-Também é possível rodar testes específicos de uma classe, por exemplo:
+### Cobertura de testes
 
-```bash
-./mvnw -Dtest=ArtistServiceImplTest test
-./mvnw -Dtest=AlbumServiceImplTest test
-```
+**✅ 116 testes passando (100% habilitados)**
 
-> Observação: existem alguns testes de integração que dependem do contexto completo do Spring e de infraestrutura (banco/Flyway). Esses testes foram anotados com `@Disabled` para que não impactem a execução dos testes unitários.
+#### Testes Unitários com Mockito
+- **Serviços de domínio**: validação de regras de negócio sem dependências externas
+- **Controllers**: validação de endpoints e fluxos de autenticação
+- **Segurança**: geração e validação de tokens JWT
 
-### O que os testes cobrem
+#### Testes de Integração com H2
+- **Contexto Spring**: carregamento completo da aplicação com banco H2 em memória
+- **JPA/Hibernate**: criação automática de schema (substitui Flyway em testes)
 
-Os testes foram organizados por serviço, cobrindo principalmente:
+### O que é testado
 
-- **Artistas e Álbuns**
-	- Criação, atualização, busca e paginação de artistas e álbuns.
-	- Validações de regras de negócio (ex.: entidades não encontradas, conflitos, etc.).
-	- Notificações via WebSocket quando um novo álbum é cadastrado.
+**Artistas e Álbuns**
+- CRUD completo com validação de entidades não encontradas
+- Filtros, paginação e ordenação alfabética
+- Notificações WebSocket na criação de álbuns
 
-- **Relacionamentos N:N (Artista x Gênero / Artista x Álbum)**
-	- Criação e remoção de vínculos entre artistas e gêneros.
-	- Criação e remoção de vínculos entre artistas e álbuns.
-	- Tratamento de conflitos (vínculo já existente) e cenários de entidades não encontradas.
+**Relacionamentos N:N**
+- Vínculos entre artistas, gêneros e álbuns
+- Prevenção de duplicatas e validação de integridade
 
-- **Regionais**
-	- Sincronização de regionais com serviço externo (Argus).
-	- Inativação de regionais locais que não existem mais na fonte externa.
-	- Criação/atualização de regionais e mapeamento para DTOs de resposta.
+**Regionais**
+- Sincronização com API externa (Argus)
+- Estratégia de inativação (sem exclusão física)
 
-- **Capas de Álbuns (MinIO)**
-	- Upload de capas para o MinIO com definição de capa primária.
-	- Listagem de capas com geração de URLs pré-assinadas.
-	- Busca da capa primária de um álbum e tratamento de casos em que não existe.
+**Capas de Álbuns**
+- Upload para MinIO e definição de capa primária
+- Geração de URLs pré-assinadas temporárias
 
-- **Usuários e Autenticação**
-    - Validação do fluxo de autenticação (login, refresh e logout).
-    - Registro de login do usuário.
-    - Normalização de e-mail e carregamento de usuários para autenticação (`UserDetailsServiceImpl`).
+**Autenticação e Segurança**
+- Fluxo completo de login, refresh e logout
+- Token rotation e blacklist de tokens invalidados
+- Validação e expiração de tokens JWT
 
-- **Gêneros Musicais**
-	- Criação e listagem de gêneros, com ordenação por nome.
-	- Busca filtrada por nome com ordenação ascendente/descendente.
-
-- **Auditoria**
-	- Registro de logs de auditoria (`AuditLogServiceImpl`) com:
-		- Serialização de dados antigos/novos em JSON.
-		- Associação com o usuário autenticado, IP e User-Agent da requisição quando disponíveis.
-		- Garantia de que falhas de auditoria **não quebram** o fluxo principal da aplicação.
-
-Além disso, há testes específicos para **JWT** (`JwtUtils`), validando geração de tokens e tratamento de tokens expirados.
+**Auditoria**
+- Rastreamento de operações com contexto de usuário e requisição
+- Resiliência (não quebra fluxo principal em caso de falha)
 
 
 ## Demonstração do MinIO
