@@ -23,6 +23,7 @@ public class AlbumServiceImpl implements AlbumService {
 
     private final AlbumRepository albumRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final br.gov.mt.seplag.igorzannattasaraiva032377.service.artistAlbum.ArtistAlbumService artistAlbumService;
 
     @Override
     public AlbumResponseDTO create(AlbumRequestDTO dto) {
@@ -30,6 +31,22 @@ public class AlbumServiceImpl implements AlbumService {
         AlbumEntity entity = AlbumMapper.toEntity(dto);
         AlbumEntity saved = albumRepository.save(entity);
         AlbumResponseDTO response = AlbumMapper.toResponse(saved);
+
+        // Vincula artistas ao álbum se fornecidos (opcional)
+        if (dto.artistIds() != null && !dto.artistIds().isEmpty()) {
+            log.info("Vinculando {} artista(s) ao álbum {}", dto.artistIds().size(), saved.getId());
+            for (UUID artistId : dto.artistIds()) {
+                try {
+                    artistAlbumService.linkArtistToAlbum(artistId, saved.getId());
+                    log.debug("Artista {} vinculado ao álbum {}", artistId, saved.getId());
+                } catch (Exception e) {
+                    log.warn("Erro ao vincular artista {} ao álbum {}: {}", artistId, saved.getId(), e.getMessage());
+                    // Continua vinculando os demais artistas mesmo se um falhar
+                }
+            }
+        } else {
+            log.debug("Álbum criado sem artistas vinculados");
+        }
 
         log.info("Enviando notificação WebSocket para /topic/albums/new, id={}", response.id());
         messagingTemplate.convertAndSend("/topic/albums/new", response);

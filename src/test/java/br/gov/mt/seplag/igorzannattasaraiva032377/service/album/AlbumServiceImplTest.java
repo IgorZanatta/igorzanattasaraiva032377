@@ -39,13 +39,16 @@ class AlbumServiceImplTest {
     @Mock
     private SimpMessagingTemplate messagingTemplate;
 
+    @Mock
+    private br.gov.mt.seplag.igorzannattasaraiva032377.service.artistAlbum.ArtistAlbumService artistAlbumService;
+
     @InjectMocks
     private AlbumServiceImpl albumService;
 
     @Test
     void create_shouldPersistAlbumAndSendWebSocketNotification() {
         UUID albumId = UUID.randomUUID();
-        AlbumRequestDTO request = new AlbumRequestDTO("Master of Puppets", 1986);
+        AlbumRequestDTO request = new AlbumRequestDTO("Master of Puppets", 1986, null);
 
         when(albumRepository.save(any(AlbumEntity.class))).thenAnswer(invocation -> {
             AlbumEntity saved = invocation.getArgument(0, AlbumEntity.class);
@@ -112,7 +115,7 @@ class AlbumServiceImplTest {
     @Test
     void update_shouldUpdateAlbumAndReturnResponse() {
         UUID albumId = UUID.randomUUID();
-        AlbumRequestDTO request = new AlbumRequestDTO("Updated Title", 2020);
+        AlbumRequestDTO request = new AlbumRequestDTO("Updated Title", 2020, null);
         AlbumEntity existing = AlbumEntity.builder()
                 .id(albumId)
                 .title("Old Title")
@@ -136,7 +139,7 @@ class AlbumServiceImplTest {
     @Test
     void update_shouldThrowWhenAlbumNotFound() {
         UUID albumId = UUID.randomUUID();
-        AlbumRequestDTO request = new AlbumRequestDTO("Title", 2020);
+        AlbumRequestDTO request = new AlbumRequestDTO("Title", 2020, null);
 
         when(albumRepository.findById(albumId)).thenReturn(Optional.empty());
 
