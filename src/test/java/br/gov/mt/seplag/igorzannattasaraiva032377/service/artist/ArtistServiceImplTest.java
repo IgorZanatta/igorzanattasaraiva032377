@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,7 @@ import br.gov.mt.seplag.igorzannattasaraiva032377.dto.artist.response.ArtistResp
 import br.gov.mt.seplag.igorzannattasaraiva032377.entity.artist.ArtistEntity;
 import br.gov.mt.seplag.igorzannattasaraiva032377.entity.artist.ArtistType;
 import br.gov.mt.seplag.igorzannattasaraiva032377.entity.genre.GenreEntity;
+import br.gov.mt.seplag.igorzannattasaraiva032377.exception.ResourceNotFoundException;
 import br.gov.mt.seplag.igorzannattasaraiva032377.repository.artist.ArtistRepository;
 import br.gov.mt.seplag.igorzannattasaraiva032377.repository.genre.GenreRepository;
 import br.gov.mt.seplag.igorzannattasaraiva032377.service.artistGenre.ArtistGenreService;
@@ -150,5 +152,80 @@ class ArtistServiceImplTest {
         assertEquals("Charlie", result.get(0).name());
         assertEquals("Bob", result.get(1).name());
         assertEquals("alice", result.get(2).name());
+    }
+
+    @Test
+    void update_shouldUpdateArtistAndGenres() {
+        UUID artistId = UUID.randomUUID();
+        UUID rockId = UUID.randomUUID();
+        UUID metalId = UUID.randomUUID();
+
+        ArtistRequestDTO dto = new ArtistRequestDTO(
+                "Updated Name",
+                ArtistType.BAND,
+                List.of("Rock", "Metal")
+        );
+
+        ArtistEntity existing = ArtistEntity.builder()
+                .id(artistId)
+                .name("Old Name")
+                .type(ArtistType.SOLO)
+                .build();
+
+        when(artistRepository.findById(artistId)).thenReturn(Optional.of(existing));
+        when(artistRepository.save(any(ArtistEntity.class))).thenReturn(existing);
+
+        when(genreRepository.findByName("Rock"))
+                .thenReturn(Optional.of(GenreEntity.builder().id(rockId).name("Rock").build()));
+        when(genreRepository.findByName("Metal"))
+                .thenReturn(Optional.of(GenreEntity.builder().id(metalId).name("Metal").build()));
+
+        when(artistGenreService.getGenreIdsByArtist(artistId))
+                .thenReturn(List.of(rockId, metalId));
+        when(genreRepository.findById(rockId))
+                .thenReturn(Optional.of(GenreEntity.builder().id(rockId).name("Rock").build()));
+        when(genreRepository.findById(metalId))
+                .thenReturn(Optional.of(GenreEntity.builder().id(metalId).name("Metal").build()));
+
+        ArtistResponseDTO response = artistService.update(artistId, dto);
+
+        assertNotNull(response);
+        assertEquals(artistId, response.id());
+        assertEquals("Updated Name", response.name());
+        assertEquals(ArtistType.BAND, response.type());
+        assertTrue(response.genres().containsAll(List.of("Rock", "Metal")));
+
+        verify(artistRepository).findById(artistId);
+        verify(artistRepository).save(existing);
+    }
+
+    @Test
+    void update_shouldThrowWhenArtistNotFound() {
+        UUID artistId = UUID.randomUUID();
+        ArtistRequestDTO dto = new ArtistRequestDTO("Name", ArtistType.SOLO, List.of());
+
+        when(artistRepository.findById(artistId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> artistService.update(artistId, dto));
+    }
+
+    @Test
+    void create_shouldThrowWhenGenreNotFound() {
+        ArtistRequestDTO dto = new ArtistRequestDTO(
+                "Artist Name",
+                ArtistType.SOLO,
+                List.of("NonExistentGenre")
+        );
+
+        UUID artistId = UUID.randomUUID();
+        when(artistRepository.save(any(ArtistEntity.class))).thenAnswer(invocation -> {
+            ArtistEntity saved = invocation.getArgument(0, ArtistEntity.class);
+            saved.setId(artistId);
+            return saved;
+        });
+
+        when(genreRepository.findByName("NonExistentGenre")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> artistService.create(dto));
     }
 }

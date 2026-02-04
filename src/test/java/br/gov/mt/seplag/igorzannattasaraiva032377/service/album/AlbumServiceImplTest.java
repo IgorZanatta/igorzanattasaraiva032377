@@ -1,10 +1,13 @@
 package br.gov.mt.seplag.igorzannattasaraiva032377.service.album;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -24,6 +27,7 @@ import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.request.AlbumRequest
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.album.response.AlbumResponseDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.entity.album.AlbumEntity;
 import br.gov.mt.seplag.igorzannattasaraiva032377.entity.artist.ArtistType;
+import br.gov.mt.seplag.igorzannattasaraiva032377.exception.ResourceNotFoundException;
 import br.gov.mt.seplag.igorzannattasaraiva032377.repository.album.AlbumRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -103,5 +107,65 @@ class AlbumServiceImplTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("Rock Band Album", result.getContent().get(0).title());
         verify(albumRepository).findByArtistType(type, pageable);
+    }
+
+    @Test
+    void update_shouldUpdateAlbumAndReturnResponse() {
+        UUID albumId = UUID.randomUUID();
+        AlbumRequestDTO request = new AlbumRequestDTO("Updated Title", 2020);
+        AlbumEntity existing = AlbumEntity.builder()
+                .id(albumId)
+                .title("Old Title")
+                .releaseYear(2010)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(existing));
+        when(albumRepository.save(any(AlbumEntity.class))).thenReturn(existing);
+
+        AlbumResponseDTO response = albumService.update(albumId, request);
+
+        assertNotNull(response);
+        assertEquals("Updated Title", response.title());
+        assertEquals(2020, response.releaseYear());
+        verify(albumRepository).findById(albumId);
+        verify(albumRepository).save(existing);
+    }
+
+    @Test
+    void update_shouldThrowWhenAlbumNotFound() {
+        UUID albumId = UUID.randomUUID();
+        AlbumRequestDTO request = new AlbumRequestDTO("Title", 2020);
+
+        when(albumRepository.findById(albumId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> albumService.update(albumId, request));
+    }
+
+    @Test
+    void delete_shouldDeleteAlbumWhenExists() {
+        UUID albumId = UUID.randomUUID();
+        AlbumEntity entity = AlbumEntity.builder()
+                .id(albumId)
+                .title("Album to Delete")
+                .releaseYear(2015)
+                .build();
+
+        when(albumRepository.findById(albumId)).thenReturn(Optional.of(entity));
+
+        albumService.delete(albumId);
+
+        verify(albumRepository).findById(albumId);
+        verify(albumRepository).delete(entity);
+    }
+
+    @Test
+    void delete_shouldThrowWhenAlbumNotFound() {
+        UUID albumId = UUID.randomUUID();
+
+        when(albumRepository.findById(albumId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> albumService.delete(albumId));
     }
 }
