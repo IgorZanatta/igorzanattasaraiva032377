@@ -44,6 +44,8 @@ Não é necessário instalar Java, Maven ou PostgreSQL localmente.
 
 ## Configuração inicial
 
+**IMPORTANTE: Execute este passo ANTES de iniciar os containers Docker!**
+
 O projeto utiliza variáveis de ambiente centralizadas no arquivo `.env`.
 
 Certifique-se de que o arquivo `.env` esteja presente na raiz do projeto antes de executar os comandos.  
