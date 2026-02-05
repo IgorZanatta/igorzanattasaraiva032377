@@ -1,7 +1,5 @@
 package br.gov.mt.seplag.igorzannattasaraiva032377.controller.auth;
 
-import java.util.Collections;
-import java.util.Date;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,33 +12,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.auth.JwtResponse;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.auth.RefreshRequest;
-import br.gov.mt.seplag.igorzannattasaraiva032377.security.jwt.JwtUtils;
-import br.gov.mt.seplag.igorzannattasaraiva032377.security.jwt.TokenBlacklist;
-import br.gov.mt.seplag.igorzannattasaraiva032377.service.user.AppUserService;
-import br.gov.mt.seplag.igorzannattasaraiva032377.service.user.UserDetailServiceImpl;
-import br.gov.mt.seplag.igorzannattasaraiva032377.service.user.UserDetailsImpl;
+import br.gov.mt.seplag.igorzannattasaraiva032377.service.auth.AuthService;
 
 @ExtendWith(MockitoExtension.class)
 class AuthControllerRefreshTest {
 
     @Mock
-    private AuthenticationManager authenticationManager;
-
-    @Mock
-    private JwtUtils jwtUtils;
-
-    @Mock
-    private AppUserService appUserService;
-
-    @Mock
-    private TokenBlacklist tokenBlacklist;
-
-    @Mock
-    private UserDetailServiceImpl userDetailService;
+    private AuthService authService;
 
     @InjectMocks
     private AuthController authController;
@@ -50,24 +31,15 @@ class AuthControllerRefreshTest {
         String refreshToken = "valid-refresh-token";
         UUID userId = UUID.randomUUID();
 
-        UserDetailsImpl userDetails = new UserDetailsImpl(
+        JwtResponse expectedResponse = new JwtResponse(
+                "new-access-token",
+                "new-refresh-token",
                 userId,
                 "User Name",
-                "user@example.com",
-                "password",
-                true,
-                Collections.emptyList()
+                "user@example.com"
         );
 
-        when(jwtUtils.validateJwtToken(refreshToken)).thenReturn(true);
-        when(tokenBlacklist.isBlacklisted(refreshToken)).thenReturn(false);
-        when(jwtUtils.getTokenType(refreshToken)).thenReturn("refresh");
-        when(jwtUtils.getUsernameFromToken(refreshToken)).thenReturn("user@example.com");
-        when(userDetailService.loadUserByUsername("user@example.com")).thenReturn(userDetails);
-        when(jwtUtils.generateAccessToken(userDetails)).thenReturn("new-access-token");
-        when(jwtUtils.generateRefreshToken(userDetails)).thenReturn("new-refresh-token");
-        Date exp = new Date(System.currentTimeMillis() + 60_000);
-        when(jwtUtils.getExpiration(refreshToken)).thenReturn(exp);
+        when(authService.refreshToken(refreshToken)).thenReturn(expectedResponse);
 
         ResponseEntity<JwtResponse> response = authController.refresh(
                 null,
@@ -84,11 +56,6 @@ class AuthControllerRefreshTest {
         assertEquals("User Name", body.name());
         assertEquals("user@example.com", body.email());
 
-        verify(jwtUtils).validateJwtToken(refreshToken);
-        verify(jwtUtils).getTokenType(refreshToken);
-        verify(jwtUtils).getUsernameFromToken(refreshToken);
-        verify(jwtUtils).generateAccessToken(userDetails);
-        verify(jwtUtils).generateRefreshToken(userDetails);
-        verify(tokenBlacklist).blacklist(refreshToken, exp.getTime());
+        verify(authService).refreshToken(refreshToken);
     }
 }
