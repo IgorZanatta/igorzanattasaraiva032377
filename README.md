@@ -1,5 +1,15 @@
 # Projeto – API de Artistas e Álbuns
 
+## Informações do Processo Seletivo
+
+- **Processo Seletivo:** PROCESSO SELETIVO CONJUNTO Nº 001/2026/SEPLAG/SEFAZ/SEDUC/SESP/PJC/PMMT/CBMMT/DETRAN/POLITEC/SEJUS/SEMA/SEAF/SINFRA/SECITECI/PGE/MTPREV
+- **Vaga:** Engenheiro da Computação – Sênior
+- **Candidato:** Igor Zanatta Saraiva
+- **Anexo Selecionado:** ANEXO II-A – Projeto Desenvolvedor Back End
+- **Projeto:** Projeto Prático – Implementação Back End Java Sênior
+
+---
+
 Projeto desenvolvido para o **Processo Seletivo – SEPLAG MT**, com foco em back-end Java e organização de infraestrutura.
 
 A aplicação consiste em uma API REST para gerenciamento de artistas e álbuns, utilizando banco de dados relacional e armazenamento de arquivos, com ambiente totalmente containerizado via Docker.
@@ -132,7 +142,7 @@ Para facilitar a validação da API, a aplicação cria automaticamente um usuá
 Esse usuário é utilizado apenas para autenticação e testes da API, não havendo endpoints públicos para gerenciamento de usuários.
 
 
-	 - A resposta conterá um `accessToken` e um `refreshToken`.
+
 
 2. Configure o token no botão **"Authorize"** do Swagger UI:
 	 - Clique em **"Authorize"** (ícone de cadeado no topo da página).
@@ -147,7 +157,7 @@ Esse usuário é utilizado apenas para autenticação e testes da API, não have
 3. A partir desse momento, todas as requisições feitas pelo Swagger para endpoints protegidos irão incluir o cabeçalho `Authorization` com o token JWT informado.
 
 4. Para renovar o token quando ele expirar, utilize o endpoint:
-	 - `POST /api/v1/auth/refresh`, enviando o `refreshToken` no corpo ou no cabeçalho `Authorization` (Bearer).
+	 - Enviando o `refreshToken` no corpo ou no cabeçalho `Authorization` (Bearer).
 
 ---
 
@@ -193,7 +203,7 @@ docker compose up --build -d api
 
 ## Testes automatizados
 
-A aplicação possui **116 testes automatizados** com cobertura das principais regras de negócio e fluxos críticos, construídos com **JUnit 5**, **Mockito** e **H2 Database** para testes de integração.
+A aplicação possui **55 testes automatizados** com cobertura das principais regras de negócio e fluxos críticos, construídos com **JUnit 5**, **Mockito** e **H2 Database** para testes de integração.
 
 ### Como executar os testes
 
@@ -211,7 +221,7 @@ mvnw.cmd test
 
 ### Cobertura de testes
 
-**✅ 116 testes passando (100% habilitados)**
+**✅ 55 testes passando (100% habilitados)**
 
 #### Testes Unitários com Mockito
 - **Serviços de domínio**: validação de regras de negócio sem dependências externas
@@ -291,6 +301,15 @@ http://localhost:8080/ws-test.html
 
 Ao cadastrar um novo álbum por meio da API, o evento será imediatamente exibido na tela, validando o envio e o recebimento das notificações em tempo real.
 
+### Autenticação do WebSocket
+
+**O endpoint WebSocket (`/ws`) está público para facilitar testes e demonstração:**
+
+- **Liberado para testes**: Permite conexão sem token JWT para facilitar validação durante desenvolvimento e avaliação
+- **Demonstração funcional**: O arquivo `ws-test.html` pode conectar diretamente sem autenticação
+- **Produção**: Recomenda-se implementar autenticação JWT no handshake do WebSocket
+
+
 ---
 
 ## Health Checks, Liveness e Readiness
@@ -325,6 +344,27 @@ Para reforçar a segurança, a aplicação mantém uma blacklist de tokens invá
 
 Endpoints de autenticação são públicos apenas quando necessário, mantendo os demais protegidos por Spring Security.
 
+## Rate Limiting
+
+A aplicação implementa rate limiting por usuário, limitando o consumo da API a **10 requisições por minuto**, conforme exigido no edital.
+
+A estratégia utilizada garante:
+- controle por usuário autenticado
+- proteção contra abuso e negação de serviço
+- resposta adequada quando o limite é excedido
+
+
+## Configuração CORS (Cross-Origin Resource Sharing)
+
+**A aplicação implementa bloqueio rigoroso de origens (CORS), atendendo ao requisito de segurança do edital:**
+
+**Comportamento atual:**
+
+- **Bloqueio total por padrão**: Qualquer origem não autorizada é **bloqueada**
+- **Localhost liberado apenas para testes**: `http://localhost:3000` está permitido exclusivamente para facilitar testes locais durante desenvolvimento e avaliação
+- **Produção preparada**: Domínio oficial SEPLAG comentado e pronto para ativação
+
+
 ---
 
 ## Decisões de Arquitetura e Escopo
@@ -337,7 +377,6 @@ Não há endpoints públicos para gerenciamento de usuários, pois o edital tem 
 
 Para facilitar testes e validação da API, um usuário padrão é criado automaticamente via Flyway Migrations.
 
----
 
 ### Artistas
 
@@ -348,7 +387,6 @@ Operações de remoção não foram expostas para evitar ambiguidades de domíni
 
 Os relacionamentos com álbuns e gêneros são tratados de forma controlada, evitando que a API se torne excessivamente permissiva ou complexa.
 
----
 
 ### Álbuns
 
@@ -368,7 +406,6 @@ Consultas por ID e listagens agregadas com artistas foram removidas para manter 
 
 A criação de um álbum dispara uma notificação via WebSocket, permitindo comunicação em tempo real com o front-end.
 
----
 
 ### Gêneros Musicais
 
@@ -379,7 +416,6 @@ Não há operações de remoção ou atualização expostas, seguindo a mesma es
 
 O relacionamento entre artistas e gêneros é modelado via tabela de junção N:N, permitindo flexibilidade e futuras extensões sem impactar o domínio principal.
 
----
 
 ### Capas de Álbuns
 
@@ -402,6 +438,9 @@ Essa abordagem separa o armazenamento físico da lógica de negócio, favorecend
 O módulo de Regionais atende ao requisito sênior de sincronização com sistema externo.
 
 As regionais são importadas a partir do serviço Argus e mantidas localmente com controle de ativação.
+
+A sincronização é executada automaticamente a cada 20 minutos, mantendo os dados atualizados sem necessidade de intervenção manual. O endpoint `/api/v1/regionais/sincronizar` permanece disponível para forçar atualizações imediatas quando necessário.
+
 O processo de sincronização:
 
 - insere novos registros,
@@ -416,33 +455,37 @@ Essa estratégia evita exclusões físicas e garante integridade referencial.
 
 ### Relacionamentos N:N
 
-A aplicação implementa relacionamentos muitos-para-muitos entre:
+A aplicação implementa relacionamentos muitos-para-muitos (**N:N**), conforme exigido no edital, entre:
 
-- Artistas e Gêneros
+- **Artistas e Álbuns**
+- **Artistas e Gêneros**
 
-- Artistas e Álbuns
+O relacionamento entre **Artistas e Álbuns** é do tipo **N:N**, conforme exigido no edital, sendo implementado por meio de **tabela de junção explícita**, garantindo **integridade referencial**, **controle de duplicidade** e **registro temporal do vínculo**.
 
-Esses relacionamentos são modelados por tabelas de junção explícitas, com controle de duplicidade, integridade referencial e registro temporal do vínculo.
+A gestão desses relacionamentos é realizada na camada de serviço, evitando a exposição desnecessária de endpoints técnicos e mantendo o domínio consistente e controlado.
 
-A gestão dos vínculos é feita na camada de serviço, evitando a exposição desnecessária de endpoints técnicos.
+> **Observação de design:**  
+> Embora o relacionamento entre Artistas e Álbuns seja do tipo **N:N** e esteja plenamente implementado no domínio, a API não expõe endpoints públicos para listar artistas de um álbum ou álbuns de um artista.  
+> Essa decisão foi tomada para evitar acoplamento excessivo, payloads desnecessários e impactos de performance, mantendo a API alinhada ao escopo do edital.  
+> O requisito de “expor quais álbuns são/tem cantores e/ou bandas” é atendido por meio de filtros parametrizados na listagem de álbuns.
 
 ---
 
 ### Auditoria
 
-A aplicação registra operações relevantes por meio de logs de auditoria, armazenando informações como:
+A aplicação possui uma infraestrutura de auditoria implementada e funcional, projetada para registrar operações relevantes com informações detalhadas, como:
 
 - entidade afetada,
-
 - tipo de operação,
-
 - estado anterior e novo,
+- usuário responsável e contexto da requisição (IP, User-Agent).
 
-- usuário responsável e contexto da requisição.
+Atualmente, a auditoria é aplicada ao **registro de login de usuários**.
 
-O mecanismo de auditoria é resiliente e não interfere no fluxo principal da aplicação em caso de falha, garantindo rastreabilidade sem comprometer disponibilidade.
+A infraestrutura está pronta (tabela, entidade, serviço e repositório) para expansão a outras operações do domínio sem refatorações estruturais.
 
 ---
+
 ## Implementações Futuras
 
 A arquitetura foi projetada visando escalabilidade e evolução do domínio, permitindo a adição de novas funcionalidades sem impacto significativo nas regras de negócio existentes.
@@ -474,6 +517,14 @@ Entre as possíveis evoluções estão:
 - Relatórios e consultas analíticas, explorando dados históricos para apoiar tomada de decisão e visualização de métricas.
 
 Essas extensões podem ser implementadas de forma incremental, aproveitando a modelagem atual baseada em entidades bem definidas, relacionamentos explícitos e separação clara de responsabilidades.
+
+---
+
+## Considerações sobre Escopo e Aderência ao Edital
+
+Todas as funcionalidades e requisitos descritos no edital para o **ANEXO II-A – Projeto Desenvolvedor Back End (PROJETO PRÁTICO - IMPLEMENTAÇÃO BACK END JAVA SÊNIOR)** foram integralmente implementados e estão disponíveis para validação.
+
+As seções de *Implementações Futuras* descritas neste README não correspondem a requisitos pendentes do edital, mas sim a **evoluções arquiteturais opcionais**, propostas para demonstrar a capacidade de expansão do sistema em um cenário de produção real, sem impacto nas funcionalidades exigidas.
 
 ---
 
