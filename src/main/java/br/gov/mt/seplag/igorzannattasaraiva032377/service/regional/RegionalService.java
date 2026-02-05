@@ -1,5 +1,17 @@
 package br.gov.mt.seplag.igorzannattasaraiva032377.service.regional;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import br.gov.mt.seplag.igorzannattasaraiva032377.client.argus.ArgusRegionalClient;
 import br.gov.mt.seplag.igorzannattasaraiva032377.client.argus.dto.ArgusRegionalDTO;
 import br.gov.mt.seplag.igorzannattasaraiva032377.dto.regional.response.RegionalResponseDTO;
@@ -7,14 +19,6 @@ import br.gov.mt.seplag.igorzannattasaraiva032377.entity.regional.RegionalEntity
 import br.gov.mt.seplag.igorzannattasaraiva032377.repository.regional.RegionalRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,8 +28,10 @@ public class RegionalService {
     private final RegionalRepository repository;
     private final ArgusRegionalClient client;
 
+    @Scheduled(fixedRate = 1200000) // Executa a cada 20 minutos (1200000ms)
     @Transactional
     public void sincronizar() {
+        log.info("Iniciando sincronização automática de regionais");
         List<ArgusRegionalDTO> externas;
         try {
             List<ArgusRegionalDTO> resposta = client.buscarRegionais();
@@ -63,6 +69,8 @@ public class RegionalService {
                 criarNova(dto);
             }
         }
+        
+        log.info("Sincronização de regionais concluída com sucesso");
     }
 
     private void criarNova(ArgusRegionalDTO dto) {
