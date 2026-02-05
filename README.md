@@ -237,6 +237,7 @@ mvnw.cmd test
 **Artistas e Álbuns**
 - CRUD completo com validação de entidades não encontradas
 - Filtros, paginação e ordenação alfabética
+- **Busca inteligente**: ignora acentos e diferenças entre maiúsculas/minúsculas (ex: "Jose" encontra "José", "telo" encontra "Teló")
 - Notificações WebSocket na criação de álbuns
 
 **Relacionamentos N:N**
@@ -383,12 +384,18 @@ Para facilitar testes e validação da API, um usuário padrão é criado automa
 O módulo de Artistas representa uma entidade central do domínio.
 
 Foram expostos apenas endpoints de criação, atualização e listagem, com filtros por nome, tipo e ordenação alfabética, conforme solicitado no edital.
+
+**Busca de artistas por nome:**
+- Ignora acentos: buscar "Jose" encontra "José"
+- Ignora maiúsculas/minúsculas: buscar "guns" encontra "Guns N' Roses"
+- Busca parcial: buscar "Michel" encontra "Michel Teló"
+
 Operações de remoção não foram expostas para evitar ambiguidades de domínio e preservar consistência histórica.
 
 Os relacionamentos com álbuns e gêneros são tratados de forma controlada, evitando que a API se torne excessivamente permissiva ou complexa.
 
 
-### Álbuns
+##**título** (busca parcial, ignora acentos e maiúsculas/minúsculas
 
 O módulo de Álbuns implementa criação, atualização, remoção e listagem paginada, atendendo diretamente aos requisitos do edital.
 
@@ -411,7 +418,7 @@ A criação de um álbum dispara uma notificação via WebSocket, permitindo com
 
 O módulo de Gêneros foi implementado como um catálogo de apoio, permitindo a categorização de artistas por estilo musical.
 
-Foram mantidos apenas endpoints de criação e listagem, com busca por nome e ordenação alfabética.
+Foram mantidos apenas endpoints de criação e listagem, com busca por nome (ignora acentos e maiúsculas/minúsculas) e ordenação alfabética.
 Não há operações de remoção ou atualização expostas, seguindo a mesma estratégia de simplificação aplicada aos demais módulos.
 
 O relacionamento entre artistas e gêneros é modelado via tabela de junção N:N, permitindo flexibilidade e futuras extensões sem impactar o domínio principal.
