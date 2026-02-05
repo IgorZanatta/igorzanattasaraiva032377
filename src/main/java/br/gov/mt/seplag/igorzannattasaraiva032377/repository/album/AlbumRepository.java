@@ -14,11 +14,15 @@ import br.gov.mt.seplag.igorzannattasaraiva032377.entity.artist.ArtistType;
 
 public interface AlbumRepository extends JpaRepository<AlbumEntity, UUID> {
 
-    List<AlbumEntity> findByTitleContainingIgnoreCase(String title);
+    @Query(value = "SELECT * FROM album WHERE LOWER(unaccent(title)) LIKE LOWER(unaccent(CONCAT('%', :title, '%')))", nativeQuery = true)
+    List<AlbumEntity> findByTitleContainingIgnoreCase(@Param("title") String title);
 
     List<AlbumEntity> findByReleaseYear(Integer releaseYear);
 
-    Page<AlbumEntity> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+    @Query(value = "SELECT * FROM album WHERE LOWER(unaccent(title)) LIKE LOWER(unaccent(CONCAT('%', :title, '%')))",
+           countQuery = "SELECT COUNT(*) FROM album WHERE LOWER(unaccent(title)) LIKE LOWER(unaccent(CONCAT('%', :title, '%')))",
+           nativeQuery = true)
+    Page<AlbumEntity> findByTitleContainingIgnoreCase(@Param("title") String title, Pageable pageable);
 
     Page<AlbumEntity> findByReleaseYear(Integer releaseYear, Pageable pageable);
 

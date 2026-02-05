@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import br.gov.mt.seplag.igorzannattasaraiva032377.entity.genre.GenreEntity;
 
@@ -14,5 +16,6 @@ public interface GenreRepository extends JpaRepository<GenreEntity, UUID> {
 
     boolean existsByName(String name);
 
-    List<GenreEntity> findByNameContainingIgnoreCase(String name);
+    @Query(value = "SELECT * FROM genre WHERE LOWER(unaccent(name)) LIKE LOWER(unaccent(CONCAT('%', :name, '%')))", nativeQuery = true)
+    List<GenreEntity> findByNameContainingIgnoreCase(@Param("name") String name);
 }
